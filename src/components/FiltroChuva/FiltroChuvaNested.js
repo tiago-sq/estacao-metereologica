@@ -39,30 +39,28 @@ function FiltroChuvaNested() {
       const response = await dados.json();
       setData(response);
     };
-
     fetchData().catch(console.warn);
   }, []);
 
   const tratarDados = (linha) => {
-    // console.info('Linha: ', linha);
-    const bools = [];
-    selectedFilters.forEach((filter) => {
-      switch (filter.condition) {
-        case '>':
-          bools.push(Number(linha[filter.column]) >= Number(filter.value));
-          break;
-        case '<':
-          bools.push(Number(linha[filter.column]) <= Number(filter.value));
-          break;
-        case '=':
-          bools.push(linha[filter.column] === filter.value.toUpperCase());
-          break;
-        default:
-          return true;
-      }
+    const filteredName = DATA.filter(({ CAPITAL }) => CAPITAL.toUpperCase().includes(cityInput.toUpperCase()));
+    const filteredNameNConditions = filteredName.filter((capital) => {
+      //Acessar um filtro
+      const filterResults = selectedFilters.map(({ column, condition, value }) => {
+        switch (condition) {
+          case '>':
+            return Number(capital[column]) > Number(value);
+          case '<':
+            return Number(capital[column]) < Number(value);
+          case '=':
+            return Number(capital[column]) === Number(value);
+          default:
+            return true;
+        }
+      });
+      return filterResults.every((el) => el);
     });
-
-    return bools.every((el) => el);
+    return filteredNameNConditions;
   };
 
   const extractNumber = (string) => Number(string.replace(/\*/g, ''));
@@ -70,23 +68,22 @@ function FiltroChuvaNested() {
   const ordenaDados = (a, b) => {
     const { column, direction } = order;
     if (column !== 'CAPITAL') {
-      if ( direction === 'ASC' ) {
+      if (direction === 'ASC') {
         return (extractNumber(a[column]) - extractNumber(b[column]));
-      } else if ( direction === 'DESC' ) {
+      } else if (direction === 'DESC') {
         console.log(extractNumber(a[column]));
         console.log(extractNumber(b[column]));
         return (extractNumber(a[column]) - extractNumber(b[column])) * -1;
-      }  
+      }
     }
-    if ( direction === 'ASC' ) {
+    if (direction === 'ASC') {
       return (a[column] > b[column]) ? 1 : -1;
-    } else if ( direction === 'DESC' ) {
+    } else if (direction === 'DESC') {
       return (a[column] < b[column]) ? 1 : -1;
     }
   }
 
-  const tratarOpcoes = (opcao) =>
-    !selectedFilters.find((filtro) => opcao === filtro.column);
+  const filtraOpcoes = (opcao) => !selectedFilters.find((filtro) => opcao === filtro.column);
 
   return (
     <div>
@@ -109,7 +106,7 @@ function FiltroChuvaNested() {
             onChange={(e) => setSelected({ ...selected, column: e.target.value })}
           >
             <option value="">Selecione uma coluna</option>
-            {['PMAX12', 'TMIN18', 'TMAX18'].filter(tratarOpcoes).map((column) => (
+            {['PMAX12', 'TMIN18', 'TMAX18'].filter(filtraOpcoes).map((column) => (
               <option value={column} key={column}>
                 {column}
               </option>
@@ -175,11 +172,11 @@ function FiltroChuvaNested() {
             ))}
           </select>
           <label>
-            <input type="radio" name="orderDirection" value="ASC" checked={ order.direction === 'ASC' } onChange={({ target }) => setOrder({ ...order, direction: target.value })} />
+            <input type="radio" name="orderDirection" value="ASC" checked={order.direction === 'ASC'} onChange={({ target }) => setOrder({ ...order, direction: target.value })} />
             Crescente
           </label>
           <label>
-            <input type="radio" name="orderDirection" value="DESC" checked={ order.direction === 'DESC' } onChange={({ target }) => setOrder({ ...order, direction: target.value })} />
+            <input type="radio" name="orderDirection" value="DESC" checked={order.direction === 'DESC'} onChange={({ target }) => setOrder({ ...order, direction: target.value })} />
             Decrescente
           </label>
         </div>
@@ -211,10 +208,7 @@ function FiltroChuvaNested() {
           </tr>
         </thead>
         <tbody>
-          {DATA.filter((el) =>
-            el.CAPITAL.toLowerCase().includes(cityInput.toLowerCase())
-          )
-            .filter(tratarDados)
+          {tratarDados()
             .sort(ordenaDados)
             .map((dados) => (
               <tr key={dados.CAPITAL}>
