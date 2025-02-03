@@ -4,7 +4,7 @@ import HeaderInfo from './components/HeaderInfo';
 
 function App() {
   return (
-    <div className="wrapper">
+    <div className="wrapper gremio">
       <HeaderInfo />
       <FiltroChuvaNested />
     </div>
